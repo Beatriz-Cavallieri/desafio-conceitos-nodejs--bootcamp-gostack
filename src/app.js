@@ -11,6 +11,22 @@ app.use(cors());
 
 const repositories = [];
 
+const validateId = (request, response, next) => {
+  const { id } = request.params
+
+  const index = repositories.findIndex(repository => repository.id === id)
+
+  if (index < 0) {
+    return response.status(400).send({ error: "ID not found" })
+  }
+
+  response.locals.index = index
+
+  next()
+}
+
+app.use('/repositories/:id', validateId)
+
 app.get("/repositories", (request, response) => {
   return response.send(repositories)
 });
@@ -35,11 +51,7 @@ app.put("/repositories/:id", (request, response) => {
   const { id } = request.params
   const { title, url, techs } = request.body
 
-  const index = repositories.findIndex(repository => repository.id === id)
-
-  if (index < 0) {
-    return response.status(400).send({ error: "ID not found" })
-  }
+  const { index } = response.locals
 
   const repository = {
     id,
@@ -53,13 +65,7 @@ app.put("/repositories/:id", (request, response) => {
 });
 
 app.delete("/repositories/:id", (request, response) => {
-  const { id } = request.params
-
-  const index = repositories.findIndex(repository => repository.id === id)
-
-  if (index < 0) {
-    return response.status(400).send({ error: "ID not found" })
-  }
+  const { index } = response.locals
 
   repositories.splice(index, 1)
 
@@ -68,13 +74,7 @@ app.delete("/repositories/:id", (request, response) => {
 });
 
 app.post("/repositories/:id/like", (request, response) => {
-  const { id } = request.params
-
-  const index = repositories.findIndex(repository => repository.id === id)
-
-  if (index < 0) {
-    return response.status(400).send({ error: "ID not found" })
-  }
+  const { index } = response.locals
 
   repositories[index].likes += 1
 
